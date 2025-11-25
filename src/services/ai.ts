@@ -35,7 +35,7 @@ export async function generateCommitMessage(
 
     // Extract text from response
     const content = response.content[0];
-    if (content.type !== "text") {
+    if (content?.type !== "text") {
       throw new AiError("Unexpected response type from Claude API");
     }
 
@@ -66,7 +66,6 @@ export async function generateCommitMessage(
 
 /**
  * Get the system prompt based on commit style
- * (We'll expand this in Step 4)
  */
 function getSystemPrompt(style: string): string {
   const basePrompt = `You are a helpful assistant that generates git commit messages.
