@@ -190,7 +190,9 @@ autoCommit();
 | `claude-sonnet-4-20250514` | $3.00 / $15.00 | Better quality |
 | `claude-opus-4-20250514` | $15.00 / $75.00 | Best quality |
 
-## Development
+## Local Development Installation
+
+If you want to use this tool from source before publishing to npm:
 ```bash
 # Clone the repo
 git clone https://github.com/YOUR_USERNAME/git-commit-ai.git
@@ -199,11 +201,22 @@ cd git-commit-ai
 # Install dependencies
 npm install
 
-# Build
+# Build the project
 npm run build
 
-# Run locally
-node dist/cli/index.js --help
+# Link globally
+npm link
+```
+
+Now you can use `gcai` or `git-commit-ai` in any git repository:
+```bash
+cd /path/to/any/project
+gcai --dry-run
+```
+
+To unlink:
+```bash
+npm unlink -g git-commit-ai
 ```
 
 ## License
