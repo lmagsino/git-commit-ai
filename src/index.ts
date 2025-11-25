@@ -24,5 +24,12 @@ export {
   ConfigError,
 } from "./utils/errors.js";
 
-// Export services
+// Export services for programmatic use
 export { loadConfig } from "./services/config.js";
+export { generateCommitMessage } from "./services/ai.js";
+export {
+  isGitRepository,
+  getStagedDiff,
+  getStagedFiles,
+  createCommit,
+} from "./services/git.js";
