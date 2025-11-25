@@ -6,51 +6,65 @@ export type UserAction = "confirm" | "regenerate" | "edit" | "cancel";
  * Ask user to confirm, regenerate, edit, or cancel the commit
  */
 export async function promptForAction(): Promise<UserAction> {
-  const { action } = await inquirer.prompt<{ action: UserAction }>([
+  console.log("\nOptions:");
+  console.log("  1) Commit with this message");
+  console.log("  2) Regenerate message");
+  console.log("  3) Edit message manually");
+  console.log("  4) Cancel\n");
+
+  const { choice } = await inquirer.prompt<{ choice: string }>([
     {
-      type: "list",
-      name: "action",
-      message: "What would you like to do?",
-      choices: [
-        { name: "✔ Commit with this message", value: "confirm" },
-        { name: "🔄 Regenerate message", value: "regenerate" },
-        { name: "✏️  Edit message manually", value: "edit" },
-        { name: "✖ Cancel", value: "cancel" },
-      ],
+      type: "input",
+      name: "choice",
+      message: "Enter choice (1-4):",
     },
   ]);
 
-  return action;
+  switch (choice.trim()) {
+    case "1":
+      return "confirm";
+    case "2":
+      return "regenerate";
+    case "3":
+      return "edit";
+    case "4":
+      return "cancel";
+    default:
+      console.log("Invalid choice, please try again.");
+      return promptForAction();
+  }
 }
 
 /**
  * Allow user to edit the commit message
  */
 export async function promptForEdit(currentMessage: string): Promise<string> {
+  console.log("\nCurrent message:");
+  console.log(currentMessage);
+  console.log("");
+
   const { message } = await inquirer.prompt<{ message: string }>([
     {
-      type: "editor",
+      type: "input",
       name: "message",
-      message: "Edit your commit message:",
-      default: currentMessage,
+      message: "Enter new commit message (or press Enter to keep current):",
     },
   ]);
 
-  return message.trim();
+  return message.trim() || currentMessage;
 }
 
 /**
  * Simple yes/no confirmation
  */
 export async function promptForConfirmation(message: string): Promise<boolean> {
-  const { confirmed } = await inquirer.prompt<{ confirmed: boolean }>([
+  const { confirmed } = await inquirer.prompt<{ confirmed: string }>([
     {
-      type: "confirm",
+      type: "input",
       name: "confirmed",
-      message,
-      default: true,
+      message: `${message} (y/n):`,
     },
   ]);
 
-  return confirmed;
+  return confirmed.toLowerCase() === "y" || confirmed.toLowerCase() === "yes";
 }

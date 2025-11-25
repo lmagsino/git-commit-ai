@@ -9,8 +9,10 @@ import {
   ensureGitRepository,
   getStagedDiff,
   getStagedFiles,
+  createCommit,
 } from "../services/git.js";
 import { generateCommitMessage } from "../services/ai.js";
+import { promptForAction, promptForEdit } from "./prompts.js";
 
 const VERSION = "0.1.0";
 
@@ -73,7 +75,7 @@ async function run(options: CliOptions): Promise<void> {
 
   // Step 3: Generate commit message
   logger.step(`Generating commit message (${chalk.cyan(options.style)} style)...`);
-  const result = await generateCommitMessage({
+  let result = await generateCommitMessage({
     diff,
     style: options.style,
     context: options.context,
@@ -82,16 +84,59 @@ async function run(options: CliOptions): Promise<void> {
   // Step 4: Display the result
   logger.commitMessage(result.message);
 
+  // Dry run mode - exit after showing message
   if (options.dryRun) {
     logger.warn("Dry run mode - commit was not created");
     return;
   }
 
-  // TODO: Next steps
-  // 5. Confirm with user (unless --yes)
-  // 6. Create commit
+  // Auto-confirm mode
+  if (options.yes) {
+    await doCommit(result.message);
+    return;
+  }
 
-  logger.success("AI integration working! Interactive confirmation coming next.");
+  // Step 5: Interactive confirmation loop
+  let commitMessage = result.message;
+
+  while (true) {
+    const action = await promptForAction();
+
+    switch (action) {
+      case "confirm":
+        await doCommit(commitMessage);
+        return;
+
+      case "regenerate":
+        logger.step("Regenerating commit message...");
+        result = await generateCommitMessage({
+          diff,
+          style: options.style,
+          context: options.context,
+        });
+        commitMessage = result.message;
+        logger.commitMessage(commitMessage);
+        break;
+
+      case "edit":
+        commitMessage = await promptForEdit(commitMessage);
+        logger.commitMessage(commitMessage);
+        break;
+
+      case "cancel":
+        logger.warn("Commit cancelled");
+        return;
+    }
+  }
+}
+
+/**
+ * Create the commit and show success message
+ */
+async function doCommit(message: string): Promise<void> {
+  logger.step("Creating commit...");
+  await createCommit(message);
+  logger.success("Commit created successfully!");
 }
 
 /**
