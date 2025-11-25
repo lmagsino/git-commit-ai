@@ -16,6 +16,9 @@ import { promptForAction, promptForEdit } from "./prompts.js";
 
 const VERSION = "0.1.0";
 
+// Get default style from environment or use "conventional"
+const defaultStyle = process.env["COMMIT_STYLE"] ?? "conventional";
+
 const program = new Command()
   .name("git-commit-ai")
   .description("Generate meaningful git commit messages using AI")
@@ -23,7 +26,7 @@ const program = new Command()
   .option(
     "-s, --style <style>",
     "Commit message style (conventional, simple, detailed)",
-    "conventional"
+    defaultStyle
   )
   .option(
     "-d, --dry-run",
