@@ -10,6 +10,7 @@ import {
   getStagedDiff,
   getStagedFiles,
 } from "../services/git.js";
+import { generateCommitMessage } from "../services/ai.js";
 
 const VERSION = "0.1.0";
 
@@ -70,22 +71,27 @@ async function run(options: CliOptions): Promise<void> {
     console.log(chalk.gray(`   ${file}`));
   });
 
-  logger.info(`Using ${chalk.cyan(options.style)} commit style`);
+  // Step 3: Generate commit message
+  logger.step(`Generating commit message (${chalk.cyan(options.style)} style)...`);
+  const result = await generateCommitMessage({
+    diff,
+    style: options.style,
+    context: options.context,
+  });
+
+  // Step 4: Display the result
+  logger.commitMessage(result.message);
 
   if (options.dryRun) {
-    logger.warn("Dry run mode - will not create commit");
+    logger.warn("Dry run mode - commit was not created");
+    return;
   }
 
-  // Show diff stats
-  const diffLines = diff.split("\n").length;
-  logger.debug(`Diff size: ${diffLines} lines`);
-
   // TODO: Next steps
-  // 3. Generate commit message (Step 3)
-  // 4. Show message and confirm (Step 5)
-  // 5. Create commit (Step 5)
+  // 5. Confirm with user (unless --yes)
+  // 6. Create commit
 
-  logger.success("Git service working! AI integration coming next.");
+  logger.success("AI integration working! Interactive confirmation coming next.");
 }
 
 /**
