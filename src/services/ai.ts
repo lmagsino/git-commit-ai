@@ -2,6 +2,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { GenerateOptions, GenerateResult } from "../types/index.js";
 import { loadConfig } from "./config.js";
 import { AiError, RateLimitError } from "../utils/errors.js";
+import {
+  getSystemPrompt,
+  buildUserPrompt,
+  truncateDiff,
+} from "../prompts/templates.js";
 
 /**
  * Generate a commit message using Claude API
@@ -11,14 +16,16 @@ export async function generateCommitMessage(
 ): Promise<GenerateResult> {
   const config = loadConfig();
 
-  // Initialize the Anthropic client
   const client = new Anthropic({
     apiKey: config.apiKey,
   });
 
-  // Build the prompt
+  // Truncate diff if too long (saves tokens, improves focus)
+  const diff = truncateDiff(options.diff);
+
+  // Build prompts using templates
   const systemPrompt = getSystemPrompt(options.style);
-  const userPrompt = buildUserPrompt(options.diff, options.context);
+  const userPrompt = buildUserPrompt(diff, options.context);
 
   try {
     const response = await client.messages.create({
@@ -62,57 +69,4 @@ export async function generateCommitMessage(
 
     throw error;
   }
-}
-
-/**
- * Get the system prompt based on commit style
- */
-function getSystemPrompt(style: string): string {
-  const basePrompt = `You are a helpful assistant that generates git commit messages.
-Analyze the provided git diff and generate a clear, concise commit message.
-Output ONLY the commit message, nothing else.`;
-
-  switch (style) {
-    case "conventional":
-      return `${basePrompt}
-
-Use the Conventional Commits format:
-<type>(<optional scope>): <description>
-
-[optional body]
-
-Types: feat, fix, docs, style, refactor, test, chore
-Keep the subject line under 72 characters.`;
-
-    case "simple":
-      return `${basePrompt}
-
-Write a simple, one-line commit message.
-Start with a capital letter, no period at the end.
-Keep it under 50 characters if possible.`;
-
-    case "detailed":
-      return `${basePrompt}
-
-Write a detailed commit message with:
-- A clear subject line (under 72 characters)
-- A blank line
-- A body explaining what changed and why`;
-
-    default:
-      return basePrompt;
-  }
-}
-
-/**
- * Build the user prompt with diff and optional context
- */
-function buildUserPrompt(diff: string, context?: string): string {
-  let prompt = `Generate a commit message for the following changes:\n\n${diff}`;
-
-  if (context) {
-    prompt += `\n\nAdditional context: ${context}`;
-  }
-
-  return prompt;
 }
