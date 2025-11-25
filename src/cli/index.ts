@@ -5,6 +5,11 @@ import chalk from "chalk";
 import type { CliOptions, CommitStyle } from "../types/index.js";
 import { GitCommitAiError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
+import {
+  ensureGitRepository,
+  getStagedDiff,
+  getStagedFiles,
+} from "../services/git.js";
 
 const VERSION = "0.1.0";
 
@@ -51,20 +56,36 @@ async function run(options: CliOptions): Promise<void> {
     );
   }
 
+  // Step 1: Check if in git repo
+  logger.step("Checking git repository...");
+  await ensureGitRepository();
+
+  // Step 2: Get staged changes
+  logger.step("Reading staged changes...");
+  const diff = await getStagedDiff();
+  const files = await getStagedFiles();
+
+  logger.info(`Found ${chalk.cyan(files.length)} staged file(s):`);
+  files.forEach((file) => {
+    console.log(chalk.gray(`   ${file}`));
+  });
+
   logger.info(`Using ${chalk.cyan(options.style)} commit style`);
 
   if (options.dryRun) {
     logger.warn("Dry run mode - will not create commit");
   }
 
-  // TODO: Implement in upcoming steps
-  // 1. Check if in git repo
-  // 2. Get staged diff
-  // 3. Generate commit message
-  // 4. Show message and confirm
-  // 5. Create commit (unless dry-run)
+  // Show diff stats
+  const diffLines = diff.split("\n").length;
+  logger.debug(`Diff size: ${diffLines} lines`);
 
-  logger.success("CLI is set up! Implementation coming in next steps.");
+  // TODO: Next steps
+  // 3. Generate commit message (Step 3)
+  // 4. Show message and confirm (Step 5)
+  // 5. Create commit (Step 5)
+
+  logger.success("Git service working! AI integration coming next.");
 }
 
 /**
