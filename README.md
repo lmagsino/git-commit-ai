@@ -47,30 +47,78 @@ npm install -g git-commit-ai
 
 ## Setup
 
-Get your API key from https://console.anthropic.com/ and set it:
+### 1. Get Your API Key
+
+Get your API key from https://console.anthropic.com/
+
+### 2. Set Global Environment Variables
+
+Add to your shell profile:
+
+**For Zsh (~/.zshrc):**
 ```bash
-export ANTHROPIC_API_KEY=your-api-key
+echo 'export ANTHROPIC_API_KEY=your-api-key-here' >> ~/.zshrc
+echo 'export COMMIT_STYLE=simple' >> ~/.zshrc
+source ~/.zshrc
 ```
 
-Or create a `.env` file in your project:
+**For Bash (~/.bashrc):**
+```bash
+echo 'export ANTHROPIC_API_KEY=your-api-key-here' >> ~/.bashrc
+echo 'export COMMIT_STYLE=simple' >> ~/.bashrc
+source ~/.bashrc
 ```
-ANTHROPIC_API_KEY=your-api-key
+
+Replace `your-api-key-here` with your actual API key.
+
+### 3. Verify Setup
+```bash
+echo $ANTHROPIC_API_KEY
+echo $COMMIT_STYLE
 ```
 
 ## Usage
 
 ### Basic Usage
-
-Stage your changes and run:
 ```bash
-# Generate commit message with default style (conventional)
-git-commit-ai
+# Stage your changes
+git add .
 
-# Or use the shorter alias
+# Generate and commit
 gcai
 ```
 
-### Example Session
+Select `1` to commit when prompted.
+
+### With Context
+```bash
+gcai -c "fixed login bug"
+```
+
+### Skip Confirmation
+```bash
+gcai -y
+```
+
+### Dry Run (Preview)
+```bash
+gcai --dry-run
+```
+
+### All Options
+```bash
+gcai --help
+
+Options:
+  -V, --version          output the version number
+  -s, --style <style>    Commit message style (conventional, simple, detailed)
+  -d, --dry-run          Preview the commit message without committing
+  -c, --context <text>   Additional context about the changes
+  -y, --yes              Skip confirmation prompt and commit directly
+  -h, --help             display help for command
+```
+
+## Example Session
 ```bash
 $ git add src/auth.ts
 $ gcai
@@ -79,14 +127,11 @@ $ gcai
 → Reading staged changes...
 ℹ Found 1 staged file(s):
    src/auth.ts
-→ Generating commit message (conventional style)...
+→ Generating commit message (simple style)...
 
 Generated commit message:
 ──────────────────────────────────────────────────
-feat(auth): add JWT token validation middleware
-
-Implement token validation for protected routes with
-expiration checking and role-based access control.
+Add JWT token validation for protected routes
 ──────────────────────────────────────────────────
 
 Options:
@@ -100,76 +145,29 @@ Options:
 ✔ Commit created successfully!
 ```
 
-### CLI Options
-```bash
-# Preview without committing
-gcai --dry-run
+## Commit Styles
 
-# Use a different style
-gcai --style simple
-gcai --style detailed
-
-# Add context for better messages
-gcai --context "Refactoring for performance"
-
-# Skip confirmation and commit directly
-gcai --yes
-
-# Combine options
-gcai --style detailed --context "Bug fix for issue #123"
-```
-
-### Commit Styles
-
-#### Conventional (default)
-```
-feat(auth): add password reset functionality
-```
-```
-fix(api): handle null response from user endpoint
-```
-
-#### Simple
+### Simple (recommended)
 ```
 Add user authentication
-```
-```
 Fix navigation bug on mobile
+Update README with setup instructions
 ```
 
-#### Detailed
+### Conventional
+```
+feat(auth): add password reset functionality
+fix(api): handle null response from user endpoint
+docs: update README with setup instructions
+```
+
+### Detailed
 ```
 Add rate limiting to API endpoints
 
 Implement rate limiting using a token bucket algorithm to prevent
 abuse and ensure fair usage across all API consumers. The limit is
 set to 100 requests per minute per API key.
-```
-
-## Programmatic Usage
-
-You can also use the package in your own scripts:
-```typescript
-import {
-  generateCommitMessage,
-  getStagedDiff,
-  createCommit,
-} from "git-commit-ai";
-
-async function autoCommit() {
-  const diff = await getStagedDiff();
-  
-  const result = await generateCommitMessage({
-    diff,
-    style: "conventional",
-    context: "Automated commit",
-  });
-  
-  console.log("Generated:", result.message);
-  await createCommit(result.message);
-}
-
-autoCommit();
 ```
 
 ## Configuration
@@ -217,6 +215,32 @@ gcai --dry-run
 To unlink:
 ```bash
 npm unlink -g git-commit-ai
+```
+
+## Programmatic Usage
+
+You can also use the package in your own scripts:
+```typescript
+import {
+  generateCommitMessage,
+  getStagedDiff,
+  createCommit,
+} from "git-commit-ai";
+
+async function autoCommit() {
+  const diff = await getStagedDiff();
+  
+  const result = await generateCommitMessage({
+    diff,
+    style: "simple",
+    context: "Automated commit",
+  });
+  
+  console.log("Generated:", result.message);
+  await createCommit(result.message);
+}
+
+autoCommit();
 ```
 
 ## License
